@@ -1,0 +1,21 @@
+# Dependencies and build output
+node_modules/
+dist/
+web-ext-artifacts/
+*.zip
+!test/fixtures/*.zip
+
+# Local exports and scratch
+claude-export-*/
+*.log
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Extra
+*commit.txt
+*.diff

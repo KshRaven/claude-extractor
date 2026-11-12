@@ -1,0 +1,33 @@
+name: Bug report
+description: Something did not export, or exported wrongly
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what you got. For a missing file or artifact, say how the chat created it (artifact panel, a created file, or shell commands).
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Extension version
+      description: Shown at the bottom right of the popup.
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and version
+      description: For example Firefox 133 or Brave 1.73.
+    validations:
+      required: true
+  - type: textarea
+    id: status
+    attributes:
+      label: Message shown in the popup
+      description: Copy any error or "could not be recovered" text.
+  - type: markdown
+    attributes:
+      value: Please do not attach exports that contain private conversations.

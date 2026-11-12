@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Claude Extractor</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <img class="logo" src="../icons/logo.svg" alt="" width="34" height="34">
+    <div class="hd">
+      <h1>Claude Extractor</h1>
+      <p id="sub">Export chats, actions and artifacts</p>
+    </div>
+  </header>
+
+  <section>
+    <div class="seg" role="radiogroup" aria-label="Which chats">
+      <label><input type="radio" name="mode" value="current" checked><span>This chat</span></label>
+      <label><input type="radio" name="mode" value="choose"><span>Pick chats</span></label>
+      <label><input type="radio" name="mode" value="all"><span>All chats</span></label>
+      <label><input type="radio" name="mode" value="projects"><span>Projects</span></label>
+    </div>
+    <div id="chooser" hidden>
+      <div class="tools">
+        <input id="search" type="search" placeholder="Search">
+        <button id="sel-vis" type="button" class="ghost">Select shown</button>
+        <button id="sel-none" type="button" class="ghost">Clear</button>
+      </div>
+      <div id="list"></div>
+      <div id="plist" hidden></div>
+    </div>
+    <label class="opt" id="projOpt" hidden><span>Include project chats <small>history and artifacts</small></span><input class="sw" type="checkbox" id="projChats" checked></label>
+  </section>
+
+  <section>
+    <h2>History</h2>
+    <div class="chips" role="group" aria-label="History formats">
+      <label class="chip"><input type="checkbox" id="f-md" checked><span>Markdown</span></label>
+      <label class="chip"><input type="checkbox" id="f-json" checked><span>JSON</span></label>
+      <label class="chip"><input type="checkbox" id="f-txt"><span>Text</span></label>
+    </div>
+    <label class="opt"><span>Thinking</span><input class="sw" type="checkbox" id="thinking" checked></label>
+    <label class="opt"><span>Tool calls and actions</span><input class="sw" type="checkbox" id="tools" checked></label>
+    <label class="opt"><span>Tool results</span><input class="sw" type="checkbox" id="toolResults"></label>
+    <label class="opt"><span>Attachment text</span><input class="sw" type="checkbox" id="attachments" checked></label>
+    <label class="opt"><span>All branches <small>edits and retries</small></span><input class="sw" type="checkbox" id="allBranches"></label>
+    <label class="opt"><span>Hide metadata <small>timestamps, IDs, model</small></span><input class="sw" type="checkbox" id="hideMeta" checked></label>
+  </section>
+
+  <section>
+    <label class="opt head"><h2>Artifacts</h2><input class="sw" type="checkbox" id="artifacts" checked></label>
+    <div id="cats" class="chips" role="group" aria-label="Artifact types">
+      <label class="chip"><input type="checkbox" class="cat" value="html" checked><span>HTML<em id="n-html"></em></span></label>
+      <label class="chip"><input type="checkbox" class="cat" value="react" checked><span>React<em id="n-react"></em></span></label>
+      <label class="chip"><input type="checkbox" class="cat" value="svg" checked><span>SVG<em id="n-svg"></em></span></label>
+      <label class="chip"><input type="checkbox" class="cat" value="markdown" checked><span>Markdown<em id="n-markdown"></em></span></label>
+      <label class="chip"><input type="checkbox" class="cat" value="mermaid" checked><span>Mermaid<em id="n-mermaid"></em></span></label>
+      <label class="chip"><input type="checkbox" class="cat" value="code" checked><span>Code<em id="n-code"></em></span></label>
+      <label class="chip"><input type="checkbox" class="cat" value="file" checked><span>Other files<em id="n-file"></em></span></label>
+    </div>
+    <label class="opt"><span>Keep every version <small>saved under versions/</small></span><input class="sw" type="checkbox" id="versions"></label>
+  </section>
+
+  <button id="go" type="button">Export zip</button>
+  <div id="status" role="status"></div>
+  <footer>
+    <a id="l-help" href="https://github.com/KshRaven/claude-extractor#readme" target="_blank" rel="noopener noreferrer">Help</a>
+    <a id="l-report" href="https://github.com/KshRaven/claude-extractor/issues/new?template=bug_report.yml" target="_blank" rel="noopener noreferrer">Report an issue</a>
+    <a id="l-repo" href="https://github.com/KshRaven/claude-extractor" target="_blank" rel="noopener noreferrer">GitHub</a>
+    <span id="ver"></span>
+  </footer>
+  <script src="popup.js"></script>
+</body>
+</html>

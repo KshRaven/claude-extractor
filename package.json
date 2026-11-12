@@ -1,0 +1,19 @@
+{
+  "name": "claude-extractor",
+  "version": "1.4.0",
+  "private": true,
+  "description": "Browser extension that exports claude.ai chats, projects, tool calls and artifacts as a zip.",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/KshRaven/claude-extractor.git" },
+  "bugs": { "url": "https://github.com/KshRaven/claude-extractor/issues" },
+  "homepage": "https://github.com/KshRaven/claude-extractor#readme",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "check": "node scripts/check.js",
+    "test": "node scripts/test.js",
+    "build": "node scripts/build.js",
+    "lint:ext": "npx --yes web-ext lint --source-dir extension",
+    "release": "node scripts/release.js",
+    "ci": "npm run check && npm test"
+  }
+}
