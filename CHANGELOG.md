@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 1.4.1
 - Presented files that cannot be recovered are now listed in the history (Markdown and text) instead of being left out.
 - Files that could not be recovered are named in an amber notice on the claude.ai page and in the popup, and the popup shows the last export result when reopened.
 

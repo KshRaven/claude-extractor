@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Claude Extractor",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "homepage_url": "https://github.com/KshRaven/claude-extractor",
   "description": "Export claude.ai chats, projects, tool calls and artifacts as a clean zip.",
   "icons": {
