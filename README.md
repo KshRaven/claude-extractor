@@ -28,8 +28,8 @@ Open claude.ai, click the extension icon, and export. Reload any claude.ai tab t
 A single chat:
 
 ```
-0412 - Chat title.zip
-└── 0412 - Chat title/
+a3f09c12 - Chat title.zip
+└── a3f09c12 - Chat title/
     ├── history.md
     ├── history.json
     ├── history.txt
@@ -37,17 +37,17 @@ A single chat:
         ├── html/  react/  svg/  markdown/  mermaid/  code/  files/
 ```
 
-The number is a short stable ID, so two chats with the same title never collide. Several chats give `Claude export <date>.zip` with one folder per chat.
+The 8-digit hex code is random and new on every download press, so two exports never share a name. Several chats give `Claude export <date>.zip` with one folder per chat.
 
 A project:
 
 ```
-0087 - Project name.zip
-└── 0087 - Project name/
+5be1d7a4 - Project name.zip
+└── 5be1d7a4 - Project name/
     ├── description.md
     ├── instructions.md
     ├── knowledge/                 the project's documents
-    └── chats/0412 - Chat title/   history and artifacts, optional
+    └── chats/a3f09c12 - Chat title/   history and artifacts, optional
 ```
 
 ## Options

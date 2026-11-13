@@ -100,10 +100,9 @@ function onMsg(m) {
   } else if (m.type === 'progress') status(m.msg);
   else if (m.type === 'done') {
     setBusy(false);
-    const bits = [`${m.chats} chat${m.chats === 1 ? '' : 's'}`, `${m.artifacts} artifact${m.artifacts === 1 ? '' : 's'}`];
-    if (m.docs != null) bits.push(`${m.docs} document${m.docs === 1 ? '' : 's'}`);
-    status(`Saved ${m.name} (${bits.join(', ')})` + (m.missing ? `. ${m.missing} file${m.missing === 1 ? '' : 's'} could not be recovered.` : ''), m.missing ? '' : 'ok');
-  } else if (m.type === 'error') { loading = false; pending = false; setBusy(false); status(m.error, 'err'); }
+    status(m.text, m.kind);
+  } else if (m.type === 'last') status('Last export: ' + m.text, m.kind);
+  else if (m.type === 'error') { loading = false; pending = false; setBusy(false); status(m.error, 'err'); }
 }
 
 async function connect() {

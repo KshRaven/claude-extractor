@@ -54,6 +54,15 @@
   };
 
   const BASH = new Set(['bash_tool', 'bash']);
+  const baseName = (p) => String(p).split('/').pop();
+  // Lines for a present_files call: recovered files link to the zip; files that could not be
+  // downloaded or rebuilt (refs['missing:<path>']) are listed by name so they are never dropped silently.
+  const presentedMd = (b, refs) => presentedPaths(b.input).map((p) => (refs && refs['p:' + p]
+    ? `> **Presented:** ${link('`' + baseName(p) + '`', refs['p:' + p])}`
+    : refs && refs['missing:' + p] ? `> **Presented (could not be recovered):** \`${baseName(p)}\`` : null)).filter(Boolean);
+  const presentedTxt = (b, refs) => presentedPaths(b.input).map((p) => (refs && refs['p:' + p]
+    ? `[Presented: ${refs['p:' + p]}]`
+    : refs && refs['missing:' + p] ? `[Presented, could not be recovered: ${baseName(p)}]` : null)).filter(Boolean);
   const presentedPaths = (i) => [].concat((i && (i.filepaths || i.file_paths || i.paths)) || []).filter((p) => typeof p === 'string');
 
   // Files written with `cat > path <<'EOF' ... EOF` inside shell commands.
@@ -257,8 +266,8 @@
       }
       case 'tool_use': {
         if (b.name === 'present_files') {
-          const hit = presentedPaths(b.input).filter((p) => refs && refs['p:' + p]);
-          if (hit.length) return hit.map((p) => `> **Presented:** ${link('`' + p.split('/').pop() + '`', refs['p:' + p])}`).join('\n');
+          const hit = presentedMd(b, refs);
+          if (hit.length) return hit.join('\n');
           return o.tools ? toolCall(b) : '';
         }
         if (refFor(b, refs)) return artRef(b, refs);
@@ -310,8 +319,8 @@
         else if (b.type === 'thinking' && o.thinking && thinkText(b)) parts.push(`[Thinking]\n${thinkText(b)}`);
         else if (b.type === 'tool_use') {
           if (b.name === 'present_files') {
-            const hit = presentedPaths(b.input).filter((p) => refs && refs['p:' + p]);
-            if (hit.length) parts.push(hit.map((p) => `[Presented: ${refs['p:' + p]}]`).join('\n'));
+            const hit = presentedTxt(b, refs);
+            if (hit.length) parts.push(hit.join('\n'));
             else if (o.tools) parts.push(`[Tool call: ${b.name}] ${JSON.stringify(b.input)}`);
           } else if (refFor(b, refs)) parts.push(`[Artifact: ${refs[artKey(b)]}]`);
           else if (o.tools) parts.push(`[Tool call: ${b.name}] ${JSON.stringify(b.input)}`);

@@ -95,3 +95,14 @@ test('zip writer produces a readable archive with binary-safe entries', async ()
   assert.equal(buf.readUInt16LE(buf.length - 22 + 10), 2);
   assert.ok(buf.includes(Buffer.from([0, 1, 2, 255])));
 });
+
+test('presented files that could not be recovered are listed, not dropped', () => {
+  const ok = '/mnt/user-data/outputs/a.js', gone = '/mnt/user-data/outputs/b.js';
+  const c = { name: 'T', chat_messages: [{ uuid: 'x', sender: 'assistant', created_at: '2026-01-01T00:00:00Z',
+    content: [{ type: 'tool_use', name: 'present_files', input: { filepaths: [ok, gone] } }] }] };
+  const refs = { ['p:' + ok]: 'artifacts/code/a.js', ['missing:' + gone]: true };
+  const md = toMarkdown(c, c.chat_messages, opts, refs);
+  assert.match(md, /\*\*Presented:\*\* \[`a\.js`\]\(artifacts\/code\/a\.js\)/);
+  assert.match(md, /\*\*Presented \(could not be recovered\):\*\* `b\.js`/);
+  assert.match(toText(c, c.chat_messages, opts, refs), /\[Presented, could not be recovered: b\.js\]/);
+});

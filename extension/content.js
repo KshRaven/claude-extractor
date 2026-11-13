@@ -100,7 +100,7 @@
     const files = arts.length ? artifactFiles(arts, o.versions) : [];
     const refs = {};
     arts.forEach((a) => {
-      if (!a.file) return;
+      if (!a.file) { if (a.remotePath) refs['missing:' + a.remotePath] = true; return; }
       refs[a.key] = a.file;
       if (a.remotePath) refs['p:' + a.remotePath] = a.file;
     });
@@ -109,7 +109,8 @@
     if (o.formats.includes('json')) e.push([`${pre}history.json`, toJson(conv, msgs, o.hideMeta)]);
     if (o.formats.includes('txt')) e.push([`${pre}history.txt`, toText(conv, msgs, fo, refs)]);
     files.forEach((f) => e.push([pre + f.path, f.content]));
-    return { entries: e, messages: msgs.length, artifacts: arts.filter((a) => a.file).length, missing: arts.filter((a) => !a.file).length };
+    return { entries: e, messages: msgs.length, artifacts: arts.filter((a) => a.file).length, missing: arts.filter((a) => !a.file).length,
+      missingNames: arts.filter((a) => !a.file).map((a) => String(a.remotePath || a.path || a.name || 'file').split('/').pop()) };
   }
 
   const uniq = (used, name) => {
@@ -128,6 +129,7 @@
     const code = randomHex(); // one new code per download press
     const single = o.ids.length === 1;
     let artCount = 0, ok = 0, missing = 0, topName = '';
+    const lost = [];
     const stamp = new Date().toISOString().slice(0, 16).replace('T', ' ').replace(':', '-');
 
     for (let i = 0; i < o.ids.length; i++) {
@@ -139,7 +141,7 @@
       if (single) topName = dir;
       const r = await chatEntries(conv, o, single ? '' : dir + '/');
       entries.push(...r.entries);
-      artCount += r.artifacts; missing += r.missing; ok++;
+      artCount += r.artifacts; missing += r.missing; lost.push(...r.missingNames); ok++;
       index.push({ title: dir, uuid: conv.uuid, created_at: conv.created_at, updated_at: conv.updated_at, model: conv.model, messages: r.messages, artifacts: r.artifacts });
       await sleep(250);
     }
@@ -147,7 +149,7 @@
     if (!ok) throw new Error(index[0]?.error || 'Could not fetch the selected chat(s).');
     if (!entries.length) throw new Error('Nothing to export. Pick a history format or at least one artifact type that exists in the chat.');
     if (!single && !o.hideMeta) entries.push(['index.json', JSON.stringify(index, null, 2)]);
-    return finish(single ? topName : `Claude export ${stamp}`, entries, { chats: ok, artifacts: artCount, missing });
+    return finish(single ? topName : `Claude export ${stamp}`, entries, { chats: ok, artifacts: artCount, missing, missingNames: lost });
   }
 
   // Layout: <XX - Project>.zip -> <XX - Project>/{description.md, instructions.md, knowledge/..., chats/<XX - Title>/...}
@@ -158,6 +160,7 @@
     const single = o.projectIds.length === 1;
     const stamp = new Date().toISOString().slice(0, 16).replace('T', ' ').replace(':', '-');
     let chatsN = 0, artCount = 0, missing = 0, docsN = 0, topName = '';
+    const lost = [];
     const all = o.includeChats ? await listChats() : [];
 
     for (let i = 0; i < o.projectIds.length; i++) {
@@ -193,14 +196,40 @@
             const conv = await getChat(mine[j].uuid);
             const r = await chatEntries(conv, o, `${pre}chats/${uniq(cu, folderName(conv, code))}/`);
             entries.push(...r.entries);
-            artCount += r.artifacts; missing += r.missing; chatsN++;
+            artCount += r.artifacts; missing += r.missing; lost.push(...r.missingNames); chatsN++;
           } catch { /* skip chats that fail */ }
           await sleep(250);
         }
       }
       if (entries.length === start) entries.push([`${pre}description.md`, `# ${safeName(p.name) || 'Project'}\n`]);
     }
-    return finish(single ? topName : `Claude projects ${stamp}`, entries, { chats: chatsN, artifacts: artCount, missing, docs: docsN });
+    return finish(single ? topName : `Claude projects ${stamp}`, entries, { chats: chatsN, artifacts: artCount, missing, missingNames: lost, docs: docsN });
+  }
+
+  // Text for the popup and the on-page notice. Kept here so both always agree.
+  function summarize(r) {
+    const bits = [`${r.chats} chat${r.chats === 1 ? '' : 's'}`, `${r.artifacts} artifact${r.artifacts === 1 ? '' : 's'}`];
+    if (r.docs != null) bits.push(`${r.docs} document${r.docs === 1 ? '' : 's'}`);
+    const lost = r.missingNames || [];
+    const names = lost.slice(0, 3).join(', ') + (lost.length > 3 ? ', …' : '');
+    const text = `Saved ${r.name} (${bits.join(', ')})` + (r.missing
+      ? `. ${r.missing} file${r.missing === 1 ? '' : 's'} could not be recovered${names ? ': ' + names : ''}. They are marked in the history.` : '');
+    return { text, kind: r.missing ? 'warn' : 'ok' };
+  }
+
+  // The popup can close as soon as the download starts, so the result is also shown on the page
+  // (when something could not be recovered) and kept for the popup to ask for when it reopens.
+  let last = null;
+  function notice(text) {
+    try {
+      const d = document.createElement('div');
+      d.textContent = 'Claude Extractor: ' + text + ' (click to dismiss)';
+      d.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:2147483647;max-width:360px;padding:10px 14px;border-radius:8px;'
+        + 'background:#2b2410;color:#f5c04a;border:1px solid #e0a43a;font:13px/1.4 system-ui,sans-serif;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4)';
+      d.onclick = () => d.remove();
+      document.body.appendChild(d);
+      setTimeout(() => d.remove(), 20000);
+    } catch { /* page not ready; popup still reports it */ }
   }
 
   function finish(top, entries, stats) {
@@ -208,14 +237,18 @@
     entries.forEach(([p, c]) => zip.add(`${top}/${p}`, c));
     const name = `${top}.zip`;
     download(zip.blob(), name);
-    return { ...stats, files: entries.length, name };
+    const r = { ...stats, files: entries.length, name };
+    Object.assign(r, summarize(r));
+    last = r;
+    if (r.missing) notice(r.text);
+    return r;
   }
 
   api.runtime.onConnect.addListener((port) => {
     if (port.name !== 'cx') return;
     port.onMessage.addListener(async (msg) => {
       try {
-        if (msg.cmd === 'context') post(port, { type: 'context', chatId: currentId() });
+        if (msg.cmd === 'context') { post(port, { type: 'context', chatId: currentId() }); if (last) post(port, { type: 'last', ...last }); }
         else if (msg.cmd === 'list') post(port, { type: 'list', chats: await listChats() });
         else if (msg.cmd === 'projects') post(port, { type: 'projects', projects: await listProjects() });
         else if (msg.cmd === 'exportProjects') post(port, { type: 'done', ...(await runProjects(msg.opts, port)) });
